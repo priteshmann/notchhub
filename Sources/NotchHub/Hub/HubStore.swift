@@ -191,7 +191,10 @@ final class HubStore: ObservableObject {
     /// Size of the black shape's content box (fillets excluded).
     func contentSize(expanded: Bool) -> CGSize {
         if expanded {
-            let width = max(Self.expandedWidth, notchWidth + 2 * Self.headerWingMinWidth)
+            // Per selected tab (Focus is wider for its heatmap); the change reaches the window
+            // through the deferred objectWillChange sink, never synchronously.
+            let tabWidth = selectedModule?.panelWidth ?? Self.expandedWidth
+            let width = max(tabWidth, notchWidth + 2 * Self.headerWingMinWidth)
             return CGSize(width: width, height: notchHeight + Self.tabStripHeight + bodyHeight)
         }
         if case .idle = collapsed {

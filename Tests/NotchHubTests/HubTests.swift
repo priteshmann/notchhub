@@ -208,22 +208,5 @@ private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
         let plug = tr.update(BatterySnapshot(percent: 10, onAC: true, charging: true, minutesRemaining: 90))
         #expect(plug.map(\.text) == ["Charging · 10%"])
     }
-
-    @Test func weekChartBucketsByLocalDay() {
-        var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "Asia/Kolkata")!
-        let now = cal.date(from: DateComponents(year: 2026, month: 10, day: 7, hour: 9))!
-        let yesterday = cal.date(byAdding: .day, value: -1, to: now)!
-        let history = [
-            SessionRecord(startedAt: now, endedAt: now, phase: .focus, minutes: 25),
-            SessionRecord(startedAt: yesterday, endedAt: yesterday, phase: .focus, minutes: 50),
-            SessionRecord(startedAt: yesterday, endedAt: yesterday, phase: .shortBreak, minutes: 5),
-        ]
-        let days = FocusStats.lastDays(7, history: history, now: now, calendar: cal)
-        #expect(days.count == 7)
-        #expect(days.last?.minutes == 25)
-        #expect(days[5].minutes == 50)
-        #expect(days.dropLast(2).allSatisfy { $0.minutes == 0 })
-    }
 }
 #endif

@@ -16,6 +16,8 @@ protocol NotchModule: AnyObject {
     var expandedView: AnyView { get }
     /// Height of the expanded body below the tab strip.
     var panelHeight: CGFloat { get }
+    /// Width of the expanded panel while this module's tab is selected.
+    var panelWidth: CGFloat { get }
     /// False for header-only modules (Battery, Caffeine).
     var showsTab: Bool { get }
     /// Item for the header strip, if any, and where it sits.
@@ -36,6 +38,7 @@ extension NotchModule {
     var collapsedView: AnyView? { nil }
     var collapsedWingWidth: CGFloat { 110 }
     var showsTab: Bool { true }
+    var panelWidth: CGFloat { HubStore.expandedWidth }
     var headerView: AnyView? { nil }
     var headerPlacement: HeaderPlacement { .right }
     func visibilityChanged(expanded: Bool, selected: Bool) {}
