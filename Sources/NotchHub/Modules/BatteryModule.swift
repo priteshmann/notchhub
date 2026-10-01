@@ -173,10 +173,12 @@ struct BatteryHeaderView: View {
         }
     }
 
-    /// "64% · 3:12" (h:mm remaining) or "64%" while estimating / full on AC.
+    /// "64% · 3h 12m" (time remaining; "to full" while charging) or "64%" while estimating / full
+    /// on AC. Never "h:mm": the owner read "7:35" as a stuck clock.
     static func text(_ s: BatterySnapshot) -> String {
         guard let m = s.minutesRemaining, !(s.onAC && !s.charging) else { return "\(s.percent)%" }
-        return "\(s.percent)% · \(m / 60):" + String(format: "%02d", m % 60)
+        let span = m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m"
+        return s.charging ? "\(s.percent)% · \(span) to full" : "\(s.percent)% · \(span)"
     }
 }
 

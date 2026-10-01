@@ -109,11 +109,28 @@ struct HeaderStrip: View {
                 ForEach(headers.filter { $0.headerPlacement == .right }.map(\.id), id: \.self) { id in
                     hub.module(id)?.headerView
                 }
+                HeaderClock()
+                    .padding(.leading, 2)
                 IconButton(systemImage: "gearshape.fill", size: 12, tint: .white.opacity(0.7),
                            help: "Settings", action: openSettings)
             }
             .padding(.trailing, 12)
         }
+    }
+}
+
+/// The real wall clock, in the system's time format, so nothing else in the header can be
+/// mistaken for it (the battery estimate used to read like a stuck clock).
+struct HeaderClock: View {
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            Text(context.date.formatted(date: .omitted, time: .shortened))
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .fixedSize()
+        }
+        .help("Current time")
     }
 }
 
