@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.pritesh.notchhub</string>
+	<key>CFBundleName</key>
+	<string>NotchHub</string>
+	<key>CFBundleDisplayName</key>
+	<string>NotchHub</string>
+	<key>CFBundleExecutable</key>
+	<string>NotchHub</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.0</string>
+	<key>CFBundleVersion</key>
+	<string>2</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>NotchHub reads the current track from Spotify or Music and sends play, pause, skip, seek and volume commands to them. It never launches either app.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>NotchHub shows your next event and today's remaining events in the notch, read-only.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>NotchHub shows your next event and today's remaining events in the notch, read-only.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The Mirror tab shows a live preview from your camera while that tab is open. Nothing is recorded or saved.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 Pritesh Mann. All rights reserved.</string>
+</dict>
+</plist>
