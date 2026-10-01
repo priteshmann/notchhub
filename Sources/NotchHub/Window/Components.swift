@@ -149,24 +149,36 @@ struct TransientBar: View {
     }
 }
 
-/// Battery outline whose fill sweeps up to `level` (loops while shown).
+/// Battery outline whose fill sweeps up to `level` (loops while shown). Driven by a timeline with
+/// plain per-frame values, not an implicit animation: the PhaseAnimator version never drew its
+/// animated fill in the running panel (only the outline showed).
 struct BatteryFillIcon: View {
     var level: Double
     var color: Color
 
+    static let sweep: TimeInterval = 0.9
+    static let hold: TimeInterval = 0.4
+
+    /// 0.25 → 1 with an ease-out over `sweep`, then held at 1 for `hold`, repeating.
+    static func progress(at date: Date) -> Double {
+        let t = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: sweep + hold)
+        let p = min(1, t / sweep)
+        return 0.25 + 0.75 * (1 - (1 - p) * (1 - p))
+    }
+
     var body: some View {
-        PhaseAnimator([0.0, 1.0]) { phase in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+            let fill = max(1, 20 * min(1, max(0, level)) * Self.progress(at: context.date))
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 3)
                     .stroke(Color.white.opacity(0.7), lineWidth: 1)
                     .frame(width: 24, height: 12)
                 RoundedRectangle(cornerRadius: 1.5)
                     .fill(color)
-                    .frame(width: max(1, 20 * min(1, max(0, level)) * (0.25 + 0.75 * phase)), height: 8)
+                    .frame(width: fill, height: 8)
                     .padding(.leading, 2)
             }
-        } animation: { phase in
-            phase == 1 ? .easeOut(duration: 0.9) : .linear(duration: 0.01)
+            .frame(width: 24, height: 12, alignment: .leading)
         }
     }
 }
