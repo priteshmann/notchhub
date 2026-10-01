@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
     private var hotkeys: [Hotkey] = []
+    private var debugDriver: DebugDriver?
     private let notifier = Notifier()
     private var cancellables = Set<AnyCancellable>()
 
@@ -77,6 +78,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Hotkey.pomodoro { [weak engine] in engine?.toggle() },
             Hotkey.panel { [weak window] in window?.toggleExpanded() },
         ].compactMap { $0 }
+
+        debugDriver = DebugDriver.startIfEnabled(
+            defaults: defaults,
+            targets: .init(hub: hub, window: window, engine: engine, caffeine: caffeine,
+                           clipboard: clipboard, notes: notes))
 
         syncLaunchAtLogin(engine)
         engine.$settings

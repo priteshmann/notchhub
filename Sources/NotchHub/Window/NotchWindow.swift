@@ -251,6 +251,17 @@ final class NotchWindowController {
         }
     }
 
+    /// Debug driver: renders the hosting view (cacheDisplay) to a PNG. Returns the frames written.
+    func snapshot(to url: URL) -> (host: NSRect, window: NSRect)? {
+        let bounds = hostingView.bounds
+        guard bounds.width > 0, bounds.height > 0,
+              let rep = hostingView.bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
+        hostingView.cacheDisplay(in: bounds, to: rep)
+        guard let png = rep.representation(using: .png, properties: [:]),
+              (try? png.write(to: url)) != nil else { return nil }
+        return (hostingView.frame, panel.frame)
+    }
+
     func toggleExpanded() {
         hub.expanded ? collapse() : expand(byHover: false)
     }
