@@ -34,6 +34,9 @@ struct NotchRootView: View {
             .frame(width: content.width)
         }
         .frame(width: size.width, height: size.height, alignment: .top)
+        // Flatten before clipping: without it the clip knocked SF Symbols drawn in black out of
+        // their white tab pill (the selected tab rendered as a blank pill).
+        .compositingGroup()
         .clipShape(shape)
         .contentShape(shape)
         .overlay {
