@@ -49,7 +49,7 @@ Login Items if you had enabled it).
   The shape flares into the menu bar with concave top fillets and has 12 pt bottom corners.
 - **Expanded:** hover the notch (or click it, or press ⌃⌥N). Header strip beside the notch: battery on
   the left, Caffeine cup + Settings gear on the right. Below it the tab strip (and the next calendar
-  event on the right), then the selected module. Width 400 pt; height depends on the tab.
+  event on the right), then the selected module. Width 400 pt (480 pt on Focus); height depends on the tab.
   Collapses 0.35 s after the mouse leaves the shape, or on Esc. Opened by hotkey or menu, it stays open
   until the mouse has visited it once (or ⌃⌥N / Esc).
 - **Right-click** the collapsed notch for the same menu as the menu bar item.
@@ -68,7 +68,7 @@ from the tab strip and its background work stops.
 
 | Module | What it does | Permission (asked lazily) |
 |---|---|---|
-| **Focus** | The v1 Pomodoro (wall-clock end dates, resumes after relaunch) + a 7-day bar chart of focused minutes. Settings: lengths, sessions before long break, sound, auto-start. | Notifications, the first time a session starts. |
+| **Focus** | The v1 Pomodoro (wall-clock end dates, resumes after relaunch) + a GitHub-style heatmap of the last 52 weeks (Sunday on top, GitHub dark greens: 1-24 / 25-49 / 50-99 / 100+ focused minutes a day, hover a square for its day). Today is outlined and pulses while a focus session runs; month labels roll forward with the year. The Focus tab is 480 pt wide, the others 400 pt. Settings: lengths, sessions before long break, sound, auto-start. | Notifications, the first time a session starts. |
 | **Now Playing** | Spotify and Apple Music via AppleScript: artwork, title/artist, scrubber (seek), previous / play-pause / next, player volume. Collapsed: artwork left of the notch, 3-bar visualizer right (animates only while playing). Polls every 2 s while a player runs and the panel is open, 5 s otherwise, not at all when neither app runs. Never launches a player. Setting: Automatic / Spotify only / Music only. | Automation (Apple Events) for Spotify / Music, the first time you open the tab (skipped if already granted). |
 | **Shelf** | Drop files on the collapsed notch (it opens on the Shelf tab while a file drag hovers it) or on the Shelf tab. Drag a file out to any app, ⌘-click to remove, double-click to open, Clear, AirDrop. Items persist as bookmarks (security-scoped when available) and follow renames/moves. | None. |
 | **Clipboard** | Last 50 (configurable 10 to 200) text / URL / image copies, polled every 0.5 s. Click a row to copy it back ("Copied"). Pin items (pinned never age out). Search. "Ignore passwords" (skips `org.nspasteboard.ConcealedType`) is on by default. | None. |
@@ -96,6 +96,12 @@ UserDefaults domain `com.pritesh.notchhub` (`~/Library/Preferences/com.pritesh.n
 
 Reset everything: `defaults delete com.pritesh.notchhub`. Debug log of panel show/expand/collapse:
 `~/Library/Logs/NotchHub.log`.
+
+Debug driver (for automated checks, off by default): `defaults write com.pritesh.notchhub debugDriver -bool true`
+and relaunch; the app then runs commands written to `~/Library/Logs/notchhub-cmd.txt` (`expand`, `tab focus`,
+`snapshot <name>` → `~/Library/Logs/notchhub-<name>.png`, `focus start`, `caffeine on`, `transient <text>`,
+`clip select <0-based row>`, `notes set <text>`, `wait <s>`) and logs each one. Turn it off with
+`defaults delete com.pritesh.notchhub debugDriver`.
 
 ## Notes
 
