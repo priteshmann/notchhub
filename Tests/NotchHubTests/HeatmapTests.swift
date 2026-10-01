@@ -86,26 +86,30 @@ import Testing
         #expect(grid.totalSessions == 3)
     }
 
-    @Test func monthLabelsOnFirstColumnOfEachMonth() {
+    @Test func monthLabelsOnTheColumnContainingTheFirst() {
         let cal = Self.calendar()
         let grid = FocusHeatmap.cells(history: [], today: Self.day(2026, 10, 1), calendar: cal)
-        // Columns start Sun 2025-10-05 → Oct at 0, Nov at 4 (Nov 2), …, Sep at 48 (Sep 6, 2026).
+        // Columns start Sun 2025-10-05. Oct at 0; Nov 1 (Sat) sits in column 3 (Oct 26 – Nov 1);
+        // the current week (Sep 27 – Oct 3) contains Oct 1, so "Oct" is labelled again at column 51.
         #expect(grid.monthLabels.map(\.text) ==
-                ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"])
+                ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"])
         #expect(grid.monthLabels.first?.column == 0)
-        #expect(grid.monthLabels.dropFirst().first?.column == 4)
+        #expect(grid.monthLabels.dropFirst().first?.column == 3)
+        #expect(grid.monthLabels.last?.column == 51)
         for label in grid.monthLabels {
-            #expect(cal.component(.month, from: grid.cell(column: label.column, row: 0).date) == label.month)
+            // The column's last day (Saturday) is in the labelled month.
+            #expect(cal.component(.month, from: grid.cell(column: label.column, row: 6).date) == label.month)
         }
     }
 
     @Test func monthLabelOverlapDropsTheEarlierPartialMonth() {
         let cal = Self.calendar()
-        // Today Sun 2026-10-18: columns start Sun 2025-10-26 (Oct), next Sun 2025-11-02 (Nov) → 1 column apart.
-        let grid = FocusHeatmap.cells(history: [], today: Self.day(2026, 10, 18), calendar: cal)
-        #expect(grid.monthLabels.first?.text == "Nov")
+        // Today Sun 2027-01-17: column 0 = Jan 25–31 2026 (Jan), column 1 = Feb 1–7 (Feb) → 1 column
+        // apart, so the partial "Jan" at the left edge is dropped and "Feb" at column 1 leads.
+        let grid = FocusHeatmap.cells(history: [], today: Self.day(2027, 1, 17), calendar: cal)
+        #expect(grid.monthLabels.first?.text == "Feb")
         #expect(grid.monthLabels.first?.column == 1)
-        #expect(grid.monthLabels.last?.text == "Oct")          // the new October at the right edge
+        #expect(grid.monthLabels.last?.text == "Jan")          // the new January at the right edge
         let columns = grid.monthLabels.map(\.column)
         for (a, b) in zip(columns, columns.dropFirst()) { #expect(b - a >= FocusHeatmap.minLabelGap) }
     }

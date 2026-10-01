@@ -83,14 +83,16 @@ enum FocusHeatmap {
         return Grid(cells: cells, monthLabels: monthLabels(cells: cells, calendar: calendar))
     }
 
-    /// A label above the first column whose first day (Sunday) falls in a new month. When two
-    /// labels would overlap, the earlier one goes (it can only be the partial month at the left edge).
+    /// A label above the first column that CONTAINS the 1st of a month (judged by the column's last
+    /// day, Saturday), so a new month is labelled the week it starts — "Oct" appears on Oct 1, not on
+    /// the first Sunday in October. When two labels would overlap, the earlier one goes (it can only
+    /// be the partial month at the left edge).
     static func monthLabels(cells: [Cell], calendar: Calendar) -> [MonthLabel] {
         let symbols = calendar.shortMonthSymbols
         var raw: [MonthLabel] = []
         var lastMonth: Int?
         for column in 0..<(cells.count / daysPerWeek) {
-            let month = calendar.component(.month, from: cells[column * daysPerWeek].date)
+            let month = calendar.component(.month, from: cells[column * daysPerWeek + daysPerWeek - 1].date)
             if month != lastMonth {
                 raw.append(MonthLabel(column: column, text: symbols[month - 1], month: month))
                 lastMonth = month
