@@ -3,10 +3,14 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// Owns the AVCaptureSession; every start/stop runs on a private serial queue (startRunning
-/// blocks). Touched from the main thread only to hand the session to the preview layer.
+/// Owns the AVCaptureSession AND its preview layer. Every session mutation (configure, attach
+/// the preview layer, mirror, start, stop) runs on one private serial queue, in that order.
+/// Attaching a preview layer adds a connection to the session; doing that on the main thread
+/// while `startRunning` enumerates connections on the queue threw
+/// "collection was mutated while being enumerated" and aborted the app (2026-10-05 crash).
 final class CameraSession: @unchecked Sendable {
     let session = AVCaptureSession()
+    let previewLayer = AVCaptureVideoPreviewLayer()
     private let queue = DispatchQueue(label: "com.pritesh.notchhub.camera")
     private var configured = false
 
@@ -25,6 +29,7 @@ final class CameraSession: @unchecked Sendable {
         }
     }
 
+    /// Runs on `queue`, never concurrently with start/stop.
     private func configureIfNeeded() -> Bool {
         if configured { return true }
         let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .unspecified)
@@ -34,8 +39,25 @@ final class CameraSession: @unchecked Sendable {
         session.sessionPreset = .high
         if session.canAddInput(input) { session.addInput(input) }
         session.commitConfiguration()
-        configured = !session.inputs.isEmpty
-        return configured
+        guard !session.inputs.isEmpty else { return false }
+
+        // Attach the preview layer here, before the session ever runs, so the connection it adds
+        // can never race `startRunning`. Mirroring goes through the connection when supported.
+        previewLayer.session = session
+        previewLayer.videoGravity = .resizeAspectFill
+        var mirroredByConnection = false
+        if let connection = previewLayer.connection, connection.isVideoMirroringSupported {
+            connection.automaticallyAdjustsVideoMirroring = false
+            connection.isVideoMirrored = true
+            mirroredByConnection = true
+        }
+        let flip = !mirroredByConnection
+        let layer = previewLayer
+        DispatchQueue.main.async {
+            layer.setAffineTransform(flip ? CGAffineTransform(scaleX: -1, y: 1) : .identity)
+        }
+        configured = true
+        return true
     }
 }
 
@@ -131,7 +153,7 @@ struct MirrorView: View {
     var body: some View {
         switch module.access {
         case .granted:
-            CameraPreview(session: module.camera.session, running: module.isRunning)
+            CameraPreview(layer: module.camera.previewLayer, running: module.isRunning)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
@@ -150,14 +172,15 @@ struct MirrorView: View {
     }
 }
 
-/// AVCaptureVideoPreviewLayer in an NSView, mirrored horizontally.
+/// Hosts the session's own preview layer in an NSView. The view only positions the layer; it
+/// never touches the session or its connections (see CameraSession).
 struct CameraPreview: NSViewRepresentable {
-    var session: AVCaptureSession
+    var layer: AVCaptureVideoPreviewLayer
     var running: Bool
 
     func makeNSView(context: Context) -> PreviewView {
         let view = PreviewView()
-        view.attach(session)
+        view.attach(layer)
         return view
     }
 
@@ -166,30 +189,22 @@ struct CameraPreview: NSViewRepresentable {
     }
 
     final class PreviewView: NSView {
-        private let preview = AVCaptureVideoPreviewLayer()
+        private var preview: AVCaptureVideoPreviewLayer?
 
-        func attach(_ session: AVCaptureSession) {
+        func attach(_ layer: AVCaptureVideoPreviewLayer) {
             wantsLayer = true
-            layer?.backgroundColor = NSColor(white: 0.1, alpha: 1).cgColor
-            preview.session = session
-            preview.videoGravity = .resizeAspectFill
-            layer?.addSublayer(preview)
+            self.layer?.backgroundColor = NSColor(white: 0.1, alpha: 1).cgColor
+            preview = layer
+            self.layer?.addSublayer(layer)
         }
 
         override func layout() {
             super.layout()
+            guard let preview else { return }
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             preview.bounds = bounds
             preview.position = CGPoint(x: bounds.midX, y: bounds.midY)
-            // Mirror: through the connection when supported, else by flipping the layer.
-            if let connection = preview.connection, connection.isVideoMirroringSupported {
-                connection.automaticallyAdjustsVideoMirroring = false
-                connection.isVideoMirrored = true
-                preview.setAffineTransform(.identity)
-            } else {
-                preview.setAffineTransform(CGAffineTransform(scaleX: -1, y: 1))
-            }
             CATransaction.commit()
         }
     }
